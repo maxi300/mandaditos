@@ -2,6 +2,8 @@
 
 App de pedidos a domicilio para varios negocios (tipo mercado en línea) para comercios de un municipio pequeño de El Salvador: pupuserías, tiendas, farmacias y ferreterías. Una sola app con dos modos: el **cliente** pide y paga en efectivo al recibir; el **negocio** recibe el pedido en tiempo real, lo acepta con tiempo estimado y lo despacha. Acceso sin contraseña con código por WhatsApp.
 
+**Estado:** MVP funcional, probado de punta a punta en modo demo (web y Expo Go). El servidor en Firebase está listo para desplegar y la beta con comercios reales está pendiente.
+
 | Modo | Qué hace |
 |---|---|
 | Cliente | Explora negocios por categoría y zona · pedido con opciones (masa, extras, nota) · compra **por monto** a granel (“$1 de tomate”) · domicilio o recoger · efectivo con cálculo de cambio · seguimiento del pedido y calificación |
@@ -9,11 +11,11 @@ App de pedidos a domicilio para varios negocios (tipo mercado en línea) para co
 
 | Capa | Tecnologías |
 |---|---|
-| App (Android · iOS · web) | Expo SDK 58 · React Native 0.88 · React 19 + React Compiler · Expo Router · TypeScript estricto |
+| App (Android · web) | Expo SDK 58 · React Native 0.88 · React 19 + React Compiler · Expo Router · TypeScript estricto |
 | Backend | Firebase Cloud Functions v2 (Node 22) · Firestore · Firebase Auth (tokens personalizados) · Cloud Scheduler |
 | Notificaciones | expo-notifications + servicio de notificaciones de Expo (FCM/APNs) · canal de Android con prioridad máxima y sonido propio |
 | Calidad | Vitest (15 pruebas de reglas de negocio) · ESLint · `tsc --noEmit` · expo-doctor 20/20 |
-| Distribución | EAS Build: APK para pruebas y paquete AAB para Google Play |
+| Distribución | EAS Build configurado: APK para pruebas y paquete AAB para Google Play |
 
 ## Estructura
 
@@ -34,11 +36,11 @@ firestore.rules      Seguridad de la base de datos
 
 ## Ingeniería
 
-**Una sola fuente de reglas.** Totales, envío por zona, pedido mínimo, cambio en efectivo y la máquina de estados están en [`shared/src`](shared/src) y se copian a la app y al servidor. El cliente ve exactamente el total que el servidor va a cobrar.
+**Una sola fuente de reglas.** Totales, envío por zona, pedido mínimo, cambio en efectivo y la máquina de estados están en `shared/src` y se copian a la app y al servidor. El cliente ve exactamente el total que el servidor va a cobrar.
 
-**El servidor manda.** La app solo indica qué productos y cuántos; [`crearPedido`](functions/src/pedidos.ts) relee los precios desde Firestore, recalcula con las reglas compartidas y registra el pedido en una transacción (código correlativo y control de pedidos pendientes). Dinero siempre en **centavos enteros**.
+**El servidor manda.** La app solo indica qué productos y cuántos; `crearPedido` relee los precios desde Firestore, recalcula con las reglas compartidas y registra el pedido en una transacción (código correlativo y control de pedidos pendientes). Dinero siempre en **centavos enteros**.
 
-**Máquina de estados con permisos por rol.** Cada transición declara quién puede ejecutarla; [`aplicarTransicion`](shared/src/orderState.ts) es una función pura que deja historial auditado. Una función programada vence pedidos no aceptados (5 min) y consultas sin respuesta (10 min).
+**Máquina de estados con permisos por rol.** Cada transición declara quién puede ejecutarla; `aplicarTransicion` es una función pura que registra en el historial quién hizo cada cambio y cuándo. Una función programada vence pedidos no aceptados (5 min) y consultas sin respuesta (10 min).
 
 ```mermaid
 stateDiagram-v2
@@ -58,7 +60,7 @@ stateDiagram-v2
     en_camino --> no_entregado
 ```
 
-**Notificaciones confiables para el negocio.** Un disparador `onDocumentWritten` sobre `pedidos/{id}` avisa al negocio de cada pedido nuevo y al cliente de cada cambio de estado. Los celulares que desinstalaron la app se eliminan solos de la lista según la respuesta del servicio de Expo.
+**Notificaciones al negocio y al cliente.** Un disparador `onDocumentWritten` sobre `pedidos/{id}` avisa al negocio de cada pedido nuevo y al cliente de cada cambio de estado. Cuando Expo responde que un celular ya no está registrado (desinstaló la app), su token se elimina.
 
 **Modo demo sin servidor.** Las pantallas dependen de la interfaz `DataSource`; un servidor simulado en memoria usa las mismas reglas compartidas, así se puede probar el flujo completo sin Firebase.
 
@@ -102,7 +104,8 @@ cd app && eas build -p android --profile preview
 ## Hoja de ruta
 
 - [x] Flujo cliente ↔ negocio en tiempo real, estados, vencimientos y consulta al cliente
-- [x] Notificaciones, borrado de cuenta y compilación de Android con EAS
+- [x] Notificaciones push, borrado de cuenta y configuración de EAS Build
+- [ ] Despliegue en Firebase y primera compilación de Android
 - [ ] Beta cerrada con comercios de Sociedad
 - [ ] Importación de catálogo desde Excel y reporte mensual por negocio
 - [ ] Firebase App Check y monitoreo de errores
