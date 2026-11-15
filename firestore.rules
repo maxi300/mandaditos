@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// Regla de oro: el teléfono LEE; todo lo que mueve dinero o estados lo ESCRIBEN las Cloud Functions.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() { return request.auth != null; }
+    function yo() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data; }
+    function esDueno(negocioId) {
+      return autenticado() && yo().negocioId == negocioId && 'negocio' in yo().roles;
+    }
+    function soloCambia(campos) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos);
+    }
+
+    // Catálogo: público para leer.
+    match /zonas/{id} { allow read: if true; allow write: if false; }
+    match /estadisticas/{id} { allow read: if true; allow write: if false; }
+
+    match /negocios/{negocioId} {
+      allow read: if true;
+      // El dueño solo puede abrir/pausar. Lo demás (envíos, mínimo, estado) lo cambia un admin.
+      allow update: if esDueno(negocioId) && soloCambia(['abierto']) && request.resource.data.abierto is bool;
+      allow create, delete: if false;
+
+      match /productos/{productoId} {
+        allow read: if true;
+        allow update: if esDueno(negocioId) && soloCambia(['disponible']) && request.resource.data.disponible is bool;
+        allow create, delete: if false;
+      }
+    }
+
+    // Perfil: cada quien el suyo; no puede darse roles ni negocio.
+    match /usuarios/{uid} {
+      allow read: if autenticado() && request.auth.uid == uid;
+      allow update: if autenticado() && request.auth.uid == uid && soloCambia(['nombre', 'direccion'])
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 60;
+      allow create, delete: if false;
+    }
+
+    // Pedidos: lo ve el cliente que lo hizo y el negocio que lo recibe. Nadie escribe desde el teléfono.
+    match /pedidos/{id} {
+      allow read: if autenticado() && (resource.data.clienteId == request.auth.uid || esDueno(resource.data.negocioId));
+      allow write: if false;
+    }
+
+    // Códigos de verificación y contadores: solo el servidor.
+    match /codigos/{x} { allow read, write: if false; }
+    match /contadores/{x} { allow read, write: if false; }
+  }
+}

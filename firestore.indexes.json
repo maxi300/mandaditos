@@ -1,0 +1,10 @@
+{
+  "indexes": [
+    { "collectionGroup": "pedidos", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "clienteId", "order": "ASCENDING" }, { "fieldPath": "creadoEn", "order": "DESCENDING" }] },
+    { "collectionGroup": "pedidos", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "negocioId", "order": "ASCENDING" }, { "fieldPath": "creadoEn", "order": "DESCENDING" }] },
+    { "collectionGroup": "pedidos", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "clienteId", "order": "ASCENDING" }, { "fieldPath": "estado", "order": "ASCENDING" }] },
+    { "collectionGroup": "pedidos", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "estado", "order": "ASCENDING" }, { "fieldPath": "expiraEn", "order": "ASCENDING" }] },
+    { "collectionGroup": "pedidos", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "estado", "order": "ASCENDING" }, { "fieldPath": "creadoEn", "order": "ASCENDING" }] }
+  ],
+  "fieldOverrides": []
+}

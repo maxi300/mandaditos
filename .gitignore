@@ -1,0 +1,16 @@
+node_modules/
+.env
+functions/lib/
+*.log
+.DS_Store
+
+# llave de servicio de Firebase (para el seed). NUNCA subirla.
+clave*.json
+*service-account*.json
+*serviceAccount*.json
+
+# Documentos internos (plan de lanzamiento, decisiones, guías): solo en local
+docs/
+# Archivos de la plantilla de Expo que no son del proyecto
+app/AGENTS.md
+app/LICENSE

@@ -1,0 +1,17 @@
+{
+  "name": "mandadito-shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reglas de negocio compartidas entre la app y el servidor (totales, estados del pedido).",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "sync": "node ../scripts/sync-shared.mjs"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}
