@@ -94,7 +94,7 @@ cd app && eas build -p android --profile preview
 
 ## Seguridad
 
-- Ninguna llave ni contraseña en Git (`.gitignore`: `.env`, `functions/.env`, llaves de cuentas de servicio). La configuración web de Firebase es pública por diseño; la protección está en las reglas y en el servidor.
+- **Manejo de secretos:** el token de WhatsApp se guarda en **Secret Manager** (`defineSecret`) y los parámetros sensibles se configuran por variables de entorno del servidor; ninguna credencial vive en el código fuente.
 - **Reglas de Firestore de mínimo privilegio:** el teléfono no puede escribir pedidos; cada cliente lee solo los suyos y cada negocio solo los de su comercio; el dueño solo puede cambiar `abierto` y `disponible`.
 - **OTP:** el código se guarda como hash SHA-256, vence a los 10 minutos y tiene límite de envíos por hora y de intentos.
 - **Borrado de cuenta** desde la app, con anonimización del historial de pedidos (requisito de Google Play y App Store).
